@@ -4,6 +4,12 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
+
+required_env_vars = ["DISCORD_TOKEN", "MONGODB_URI"]
+missing = [var for var in required_env_vars if not os.getenv(var)]
+if missing:
+    raise ValueError(f"Missing required environment variables: {', '.join(missing)}")
+
 intents = discord.Intents.default()
 intents.message_content = True
 

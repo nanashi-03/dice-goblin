@@ -31,7 +31,7 @@ class Attack(commands.Cog):
         self.bot = bot
 
     @commands.command(name="attack", aliases=["atk", "a"], help="Make an attack with a weapon. Usage: !attack <weapon_name> [attack_number] [-d <extra_damage>] [-b <extra_bonus>] [-ac <target_ac>] [crit] [traits...]")
-    async def attack(self, ctx, weapon_name: str, attack_number: int = 1, *args):
+    async def attack(self, ctx, weapon_name: str, *args):
         character = get_active_character(ctx.author.id) 
      
         if not character:
@@ -42,17 +42,24 @@ class Attack(commands.Cog):
         extra_bonus = 0
         target_ac = None
         crit_flag = False
+        attack_number = 1
         traits = parse_traits(args)
 
         for i, arg in enumerate(args):
-            if arg == "-d" and i + 1 < len(args):
-                extra_dmg = int(args[i + 1])
-            if arg == "-b" and i + 1 < len(args):
-                extra_bonus = int(args[i + 1])
-            if arg == "-ac" and i + 1 < len(args):
-                target_ac = int(args[i + 1])
-            if arg.lower() == "crit":
-                crit_flag = True
+            try:
+                if arg == "-d" and i + 1 < len(args):
+                    extra_dmg = int(args[i + 1])
+                if arg == "-b" and i + 1 < len(args):
+                    extra_bonus = int(args[i + 1])
+                if arg == "-ac" and i + 1 < len(args):
+                    target_ac = int(args[i + 1])
+                if arg == "-n" and i + 1 < len(args):
+                    attack_number = int(args[i + 1])
+                if arg.lower() == "crit":
+                    crit_flag = True
+            except ValueError:
+                await ctx.send(f"❌ Invalid argument: {arg}. Please provide valid integers for modifiers.")
+                return
 
         weapons = character.get("weapons", [])
         weapon_names = [w["name"] for w in weapons]
@@ -65,13 +72,13 @@ class Attack(commands.Cog):
 
         # Determine MAP
         if traits.get("agile") and traits.get("flurry"):
-            map_penalty = {1: 0, 2: -1, 3: -2}.get(attack_number, 1)
+            map_penalty = {1: 0, 2: -1, 3: -2}.get(attack_number, 0)
         elif traits.get("flurry"):
-            map_penalty = {1: 0, 2: -2, 3: -4}.get(attack_number, 1)
+            map_penalty = {1: 0, 2: -2, 3: -4}.get(attack_number, 0)
         elif traits.get("agile"):
-            map_penalty = {1: 0, 2: -4, 3: -8}.get(attack_number, 1)
+            map_penalty = {1: 0, 2: -4, 3: -8}.get(attack_number, 0)
         else:
-            map_penalty = {1: 0, 2: -5, 3: -10}.get(attack_number, 1)
+            map_penalty = {1: 0, 2: -5, 3: -10}.get(attack_number, 0)
         
         if map_penalty is None:
             map_penalty = 0

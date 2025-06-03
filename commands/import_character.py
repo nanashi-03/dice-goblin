@@ -5,11 +5,25 @@ import aiohttp
 from utils.parse_json import parse_pathbuilder_character
 
 class ImportCharacter(commands.Cog):
-    @commands.command(name="import", help="Import or update your character from Pathbuilder 2e using its ID. Example: `!import 123456`. Click on 'Export to JSON' in Pathbuilder to get the ID.")
+    @commands.command(name="import", help="Import or update your character from Pathbuilder 2e using its ID. Example: `!import [123456]`. Click on 'Export to JSON' in Pathbuilder to get the ID. If no ID is provided, uses the ID from your last import.")
     @commands.cooldown(1, 10, commands.BucketType.user)
-    async def import_character(self, ctx, pb_id: str):
-        url = f"https://pathbuilder2e.com/json.php?id={pb_id}"
+    async def import_character(self, ctx, pb_id: str = None):
         user_id = str(ctx.author.id)
+        
+        # If no pb_id provided, try to get existing one
+        if pb_id is None:
+            existing_char = characters.find_one({"user_id": user_id})
+            if existing_char and "pb_id" in existing_char:
+                pb_id = existing_char["pb_id"]
+            else:
+                await ctx.send("❌ No character ID provided and no existing character found. Please provide a Pathbuilder ID.")
+                return
+        
+        url = f"https://pathbuilder2e.com/json.php?id={pb_id}"
+
+        if pb_id and not pb_id.isdigit():
+            await ctx.send("❌ Invalid Pathbuilder ID format. IDs should be numbers only.")
+            return
 
         connector = aiohttp.TCPConnector(force_close=True)
         async with aiohttp.ClientSession(connector=connector) as session:

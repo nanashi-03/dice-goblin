@@ -40,12 +40,13 @@ class Sheet(commands.Cog):
             inline=True
         )
 
+        money = character.get("money")
         embed.add_field(
             name="Money",
-            value=f"**Copper**: {character.get("money").get('cp', 0)}\n"
-                  f"**Silver**: {character.get("money").get('sp', 0)}\n"
-                  f"**Gold**: {character.get("money").get('gp', 0)}\n"
-                  f"**Platinum**: {character.get("money").get('pp', 0)}",
+            value=f"**Copper**: {money.get('cp', 0)}\n"
+                  f"**Silver**: {money.get('sp', 0)}\n"
+                  f"**Gold**: {money.get('gp', 0)}\n"
+                  f"**Platinum**: {money.get('pp', 0)}",
             inline=True
         )
 
