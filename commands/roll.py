@@ -116,5 +116,14 @@ class RollCommand(commands.Cog):
 
         await ctx.send(embed=embed)
 
+    @roll.error
+    async def roll_error(self, ctx, error):
+        if isinstance(error, commands.MissingRequiredArgument):
+            await ctx.send("❌ Please provide a roll expression or lore skill.")
+        elif isinstance(error, commands.BadArgument):
+            await ctx.send("❌ Invalid roll format. Use `!roll <expression>` or `!roll lore <skill>`.")
+        else:
+            await ctx.send("❌ An unexpected error occurred while processing the roll.")
+
 async def setup(bot):
     await bot.add_cog(RollCommand())

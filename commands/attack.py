@@ -130,5 +130,14 @@ class Attack(commands.Cog):
 
         await ctx.send(embed=embed)
 
+    @attack.error
+    async def attack_error(self, ctx, error):
+        if isinstance(error, commands.MissingRequiredArgument):
+            await ctx.send("❌ Missing required arguments. Usage: `!attack <weapon_name> [attack_number] [-d <extra_damage>] [-b <extra_bonus>] [-ac <target_ac>] [crit] [traits...]`")
+        elif isinstance(error, commands.BadArgument):
+            await ctx.send("❌ Invalid argument type. Please check your inputs.")
+        else:
+            await ctx.send(f"❌ An unexpected error occurred: {error}")
+
 async def setup(bot):
     await bot.add_cog(Attack(bot))

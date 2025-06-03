@@ -46,6 +46,18 @@ class ImportCharacter(commands.Cog):
             upsert=True
         )
         await ctx.send(f"✅ Successfully imported **{parsed['name']}**!")
+    
+    #handle the cooldown error
+    @import_character.error
+    async def import_character_error(self, ctx, error):
+        if isinstance(error, commands.CommandOnCooldown):
+            await ctx.send(f"⏳ Please wait {error.retry_after:.2f} seconds before importing again.")
+        elif isinstance(error, commands.BadArgument):
+            await ctx.send("❌ Invalid Pathbuilder ID format. Please provide a valid numeric ID.")
+        elif isinstance(error, commands.MissingRequiredArgument):
+            await ctx.send("❌ Please provide a Pathbuilder ID to import your character.")
+        else:
+            await ctx.send("❌ An unexpected error occurred while importing the character.")
 
 async def setup(bot):
     await bot.add_cog(ImportCharacter())
