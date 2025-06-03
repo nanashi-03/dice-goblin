@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 import d20
-from db import characters, users
+from db import characters
 import difflib
 
 MODIFIER_FIELDS = {
@@ -44,13 +44,7 @@ class RollCommand(commands.Cog):
         # Lore handling
         if expression.startswith("lore "):
             lore_query = expression[5:].strip()
-            user_data = users.find_one({"user_id": user_id})
-            if not user_data or not user_data.get("current_character"):
-                await ctx.send("❌ No active character. Use `!setactive` first.")
-                return
-
-            pb_id = user_data["current_character"]
-            character = characters.find_one({"user_id": user_id, "pb_id": pb_id})
+            character = characters.find_one({"user_id": user_id})
             if not character:
                 await ctx.send("❌ Character not found.")
                 return
@@ -90,13 +84,7 @@ class RollCommand(commands.Cog):
             stat_label = f"{lore_name.title()} Lore"
 
         elif expression in MODIFIER_FIELDS:
-            user_data = users.find_one({"user_id": user_id})
-            if not user_data or not user_data.get("current_character"):
-                await ctx.send("❌ No active character set.")
-                return
-
-            pb_id = user_data["current_character"]
-            character = characters.find_one({"user_id": user_id, "pb_id": pb_id})
+            character = characters.find_one({"user_id": user_id})
             if not character:
                 await ctx.send("❌ Active character not found.")
                 return

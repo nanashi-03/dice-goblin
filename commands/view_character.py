@@ -1,16 +1,11 @@
 import discord
 from discord.ext import commands
-from db import characters, users
+from db import characters
 
 class Sheet(commands.Cog):
     @commands.command(name="sheet", help="View your character sheet.")
     async def character_sheet(self, ctx):
         user_id = str(ctx.author.id)
-
-        user_doc = users.find_one({"user_id": user_id})
-        if not user_doc or not user_doc.get("current_character"):
-            await ctx.send("❌ You don't have a current character set. Use `!setactive` to set one.")
-            return
 
         def striking_multiplier(striking: str):
             return {
@@ -20,10 +15,9 @@ class Sheet(commands.Cog):
                 "majorStriking": 4
             }.get(striking, 1)
 
-        pb_id = user_doc["current_character"]
-        character = characters.find_one({"user_id": user_id, "pb_id": pb_id})
+        character = characters.find_one({"user_id": user_id})
         if not character:
-            await ctx.send("❌ Active character not found. Try re-importing with `!import`.")
+            await ctx.send("❌ Character not found. Try re-importing with `!import`.")
             return
 
         embed = discord.Embed(
