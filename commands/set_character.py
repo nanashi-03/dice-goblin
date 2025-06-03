@@ -2,7 +2,7 @@ from discord.ext import commands
 from db import characters, users
 
 class SetActiveCharacter(commands.Cog):
-    @commands.command(name="setactive")
+    @commands.command(name="setactive" , aliases=["setactivecharacter", "setchar"], help="Set your active character by Pathbuilder ID. Use `!listchars` to see your characters.")
     async def set_active_character(self, ctx, pb_id: str):
         user_id = str(ctx.author.id)
 

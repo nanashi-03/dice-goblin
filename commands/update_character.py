@@ -5,7 +5,7 @@ import aiohttp
 from utils.parse_json import parse_pathbuilder_character
 
 class UpdateCharacter(commands.Cog):
-    @commands.command(name="update")
+    @commands.command(name="update", aliases=["uc"], help="Updates your current character from Pathbuilder. Use this if you made changes in Pathbuilder and want to sync them. Make sure to click on 'Export to JSON' in Pathbuilder before using this command.")
     @commands.cooldown(1, 10, commands.BucketType.user)
     async def update_current_character(self, ctx):
         user_id = str(ctx.author.id)

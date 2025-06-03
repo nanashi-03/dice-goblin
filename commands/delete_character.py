@@ -3,7 +3,7 @@ from db import characters, users
 import asyncio
 
 class DeleteCharacter(commands.Cog):
-    @commands.command(name="deletechar")
+    @commands.command(name="deletechar", aliases=["delchar", "deletecharacter"], help="Delete a character by Pathbuilder ID. Use `!listchars` to see your characters.")
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def delete_character(self, ctx, pb_id: str):
         user_id = str(ctx.author.id)

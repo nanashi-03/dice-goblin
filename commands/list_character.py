@@ -4,7 +4,7 @@ from db import characters, users
 from math import ceil
 
 class ListCharacters(commands.Cog):
-    @commands.command(name="listchars")
+    @commands.command(name="listchars" alias=["listcharacters", "lc", "list"], help="List your imported characters.")
     async def list_characters(self, ctx, sort_by: str = "name"):
         user_id = str(ctx.author.id)
         all_chars = list(characters.find({"user_id": user_id}))

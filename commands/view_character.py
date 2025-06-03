@@ -3,7 +3,7 @@ from discord.ext import commands
 from db import characters, users
 
 class Sheet(commands.Cog):
-    @commands.command(name="sheet")
+    @commands.command(name="sheet", help="View your character sheet.")
     async def character_sheet(self, ctx):
         user_id = str(ctx.author.id)
 
@@ -85,6 +85,13 @@ class Sheet(commands.Cog):
         embed.add_field(
             name="✨ Feats",
             value=", ".join(feats) if feats else "None",
+            inline=False
+        )
+
+        weapons = character.get("weapons", [])
+        embed.add_field(
+            name="🗡️ Weapons",
+            value="\n".join([f"{w['display']} (Damage: {w.get('damage', 'N/A')}, Damage Type: {w.get('damage_type', 'N/A')}, Attack Bonus: {w.get('attack_bonus', 0)})" for w in weapons]) if weapons else "None",
             inline=False
         )
 

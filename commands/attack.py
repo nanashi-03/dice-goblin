@@ -1,132 +1,134 @@
 import discord
 from discord.ext import commands
-from db import characters, users
 import d20
-import re
 from difflib import get_close_matches
+import re
+from utils.fetch import get_active_character  # You should have a utility for this
 
-STRIKING_DICE = {
-    None: 1,
-    "striking": 2,
-    "greaterStriking": 3,
-    "majorStriking": 4
-}
+def parse_traits(args):
+    traits = {}
+    for arg in args:
+        if arg.startswith("fatal-"):
+            traits["fatal"] = arg.split("-")[1]
+        elif arg.startswith("deadly-"):
+            traits["deadly"] = arg.split("-")[1]
+        elif arg.startswith("2h-"):
+            traits["2h"] = arg.split("-")[1]
+        elif arg in {"agile", "flurry"}:
+            traits[arg] = True
+    return traits
 
-DIE_SIZES = ["d4", "d6", "d8", "d10", "d12"]
+def striking_multiplier(striking: str):
+    return {
+        "": 1,
+        "striking": 2,
+        "greaterStriking": 3,
+        "majorStriking": 4
+    }.get(striking, 1)
 
 class Attack(commands.Cog):
-    @commands.command(name="attack", aliases=["atk"])
-    async def attack(self, ctx, *, args):
-        user_id = str(ctx.author.id)
-        user = users.find_one({"user_id": user_id})
-        if not user or "current_character" not in user:
-            await ctx.send("❌ You have no active character. Use `!setactive`.")
-            return
+    def __init__(self, bot):
+        self.bot = bot
 
-        character = characters.find_one({
-            "user_id": user_id,
-            "pb_id": user["current_character"]
-        })
+    @commands.command(name="attack", aliases=["atk", "a"], help="Make an attack with a weapon. Usage: !attack <weapon_name> [attack_number] [-d <extra_damage>] [-b <extra_bonus>] [-ac <target_ac>] [crit] [traits...]")
+    async def attack(self, ctx, weapon_name: str, attack_number: int = 1, *args):
+        character = get_active_character(ctx.author.id) 
+     
         if not character:
-            await ctx.send("❌ Could not find your current character.")
-            return
+            return await ctx.send("No active character set.")
 
-        # Parse input
-        match = re.match(r"(?P<name>[^\d]+)\s*(?P<attack_num>[123])?", args)
-        if not match:
-            await ctx.send("❌ Invalid format. Example: `!attack rapier 1 -b 2 -ac 18 agile`")
-            return
+        # Optional modifiers
+        extra_dmg = 0
+        extra_bonus = 0
+        target_ac = None
+        crit_flag = False
+        traits = parse_traits(args)
 
-        weapon_name = match.group("name").strip()
-        attack_number = int(match.group("attack_num") or "1")
+        for i, arg in enumerate(args):
+            if arg == "-d" and i + 1 < len(args):
+                extra_dmg = int(args[i + 1])
+            if arg == "-b" and i + 1 < len(args):
+                extra_bonus = int(args[i + 1])
+            if arg == "-ac" and i + 1 < len(args):
+                target_ac = int(args[i + 1])
+            if arg.lower() == "crit":
+                crit_flag = True
 
-        # Flags
-        bonus_match = re.findall(r"-b\s*(-?\d+)", args)
-        damage_bonus_match = re.findall(r"-d\s*(-?\d+)", args)
-        ac_match = re.findall(r"-ac\s*(\d+)", args)
-        traits = {
-            "agile": "agile" in args,
-            "flurry": "flurry" in args,
-        }
-        for trait in ["fatal", "deadly", "2h"]:
-            match_trait = re.findall(rf"{trait}-({'|'.join(DIE_SIZES)})", args)
-            traits[trait] = match_trait[0] if match_trait else None
-
-        extra_attack_bonus = int(bonus_match[0]) if bonus_match else 0
-        extra_damage_bonus = int(damage_bonus_match[0]) if damage_bonus_match else 0
-        target_ac = int(ac_match[0]) if ac_match else None
-
-        # Find the weapon fuzzily
         weapons = character.get("weapons", [])
         weapon_names = [w["name"] for w in weapons]
         close = get_close_matches(weapon_name, weapon_names, n=1)
         if not close:
             await ctx.send("❌ Weapon not found.")
             return
-
+        
         weapon = next(w for w in weapons if w["name"] == close[0])
-        die = traits["2h"] or weapon.get("die", "d6")
-        pot = int(weapon.get("pot", 0))
-        str_value = weapon.get("str", None)
-        striking_dice = STRIKING_DICE.get(str_value, 1)
 
-        # Determine MAP (Multiple Attack Penalty)
-        map_penalties = {
-            1: 0,
-            2: -5,
-            3: -10
-        }
-        penalty = map_penalties[attack_number]
-        if traits["agile"]:
-            penalty += 1
-        if traits["flurry"]:
-            penalty += 3
-        penalty = min(0, penalty)  # Prevent increasing attack by accident
+        # Determine MAP
+        if traits.get("agile") and traits.get("flurry"):
+            map_penalty = {1: 0, 2: -1, 3: -2}.get(attack_number, 1)
+        elif traits.get("flurry"):
+            map_penalty = {1: 0, 2: -2, 3: -4}.get(attack_number, 1)
+        elif traits.get("agile"):
+            map_penalty = {1: 0, 2: -4, 3: -8}.get(attack_number, 1)
+        else:
+            map_penalty = {1: 0, 2: -5, 3: -10}.get(attack_number, 1)
+        
+        if map_penalty is None:
+            map_penalty = 0
 
-        # Final attack bonus
-        attack_bonus = int(weapon.get("attack", 0)) + pot + extra_attack_bonus + penalty
+        # Calculate attack bonus
+        attack_bonus = weapon["attack_bonus"] + weapon.get("potency", 0) + extra_bonus + map_penalty
+
+        # Roll attack
         attack_roll = d20.roll(f"1d20 + {attack_bonus}")
+        attack_result = attack_roll.total
 
-        embed = discord.Embed(
-            title=f"🎯 Attack with {weapon['name']}",
-            description=f"**Attack Roll:** {attack_roll}",
-            color=discord.Color.orange()
-        )
+        # Determine hit/miss if AC is given
+        hit_type = "N/A"
+        if crit_flag:
+            hit_type = "Critical Hit"
+        elif target_ac is not None:
+            if attack_result >= target_ac + 10:
+                hit_type = "Critical Hit"
+            elif attack_result >= target_ac:
+                hit_type = "Hit"
+            elif attack_result <= target_ac - 10:
+                hit_type = "Critical Miss"
+            else:
+                hit_type = "Miss"
 
-        crit = False
+        # Determine damage die size
+        damage_die = traits.get("2h", weapon["damage_die"])
+        striking = weapon.get("striking", "")
+        num_dice = striking_multiplier(striking)
+
+        damage_expr = f"{num_dice}{damage_die} + {weapon.get('damage_bonus', 0) + extra_dmg}"
+        if hit_type == "Critical Hit":
+            if "fatal" in traits:
+                damage_expr = f"{num_dice}{traits['fatal']} * 2 + {weapon.get('damage_bonus', 0) + extra_dmg}"
+            else:
+                damage_expr = f"({damage_expr}) * 2"
+            if "deadly" in traits:
+                damage_expr += f" + 1{traits['deadly']}"
+
+        if hit_type in ["Hit", "Critical Hit", "N/A"]:
+            damage_roll = d20.roll(damage_expr)
+            damage = damage_roll.total
+        else:
+            damage = None
+
+        # Build response embed
+        embed = discord.Embed(title=f"🎯 Attack Roll: {weapon['display']}", color=discord.Color.green())
+        embed.add_field(name="🎲 Roll", value=f"`{attack_roll}` = **{attack_result}**", inline=False)
         if target_ac:
-            result = attack_roll.total
-            if result >= target_ac + 10:
-                embed.description += f"\n**Critical Hit!** (vs AC {target_ac})"
-                crit = True
-            elif result >= target_ac:
-                embed.description += f"\n**Hit!** (vs AC {target_ac})"
-            else:
-                embed.description += f"\n**Miss!** (vs AC {target_ac})"
-                await ctx.send(embed=embed)
-                return
+            embed.add_field(name="🎯 Target AC", value=target_ac, inline=True)
+            embed.add_field(name="✅ Result", value=hit_type, inline=True)
+        if damage is not None:
+            embed.add_field(name="💥 Damage", value=f"`{damage_expr}` = **{damage}**", inline=False)
+        else:
+            embed.add_field(name="💥 Damage", value="Missed!", inline=False)
 
-        # Calculate damage
-        base_damage = f"{striking_dice}{die}"
-        damage_roll_str = f"{base_damage} + {extra_damage_bonus}" if extra_damage_bonus else base_damage
-        damage_roll = d20.roll(damage_roll_str)
-
-        if crit:
-            # Fatal overrides dice
-            if traits["fatal"]:
-                fatal_die = traits["fatal"]
-                damage_roll = d20.roll(f"{striking_dice}{fatal_die}")
-                damage_roll = d20.roll(f"({damage_roll}) * 2")
-            else:
-                # Normal crit
-                damage_roll = d20.roll(f"({damage_roll}) * 2")
-                if traits["deadly"]:
-                    deadly_die = traits["deadly"]
-                    deadly_roll = d20.roll(deadly_die)
-                    damage_roll = d20.roll(f"({damage_roll}) + {deadly_roll}")
-
-        embed.add_field(name="💥 Damage", value=f"`{damage_roll}`", inline=False)
         await ctx.send(embed=embed)
 
 async def setup(bot):
-    await bot.add_cog(Attack())
+    await bot.add_cog(Attack(bot))

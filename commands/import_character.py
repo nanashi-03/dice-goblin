@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from utils.parse_json import parse_pathbuilder_character
 
 class ImportCharacter(commands.Cog):
-    @commands.command(name="import")
+    @commands.command(name="import", help="Import a character from Pathbuilder 2e using its ID. Example: `!import 123456`. Clcik on 'Export to JSON' in Pathbuilder to get the ID.")
     @commands.cooldown(1, 10, commands.BucketType.user)
     async def import_character(self, ctx, pb_id: str):
         url = f"https://pathbuilder2e.com/json.php?id={pb_id}"

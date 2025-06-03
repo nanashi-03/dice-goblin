@@ -21,7 +21,7 @@ async def setup_hook():
         "update_character",
         "list_character",
         "set_character",
-        # "attack"
+        "attack"
     ]
     for ext in extensions:
         await bot.load_extension(f"commands.{ext}")

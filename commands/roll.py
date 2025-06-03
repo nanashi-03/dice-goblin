@@ -35,7 +35,7 @@ def get_nested(doc, dotted_key):
     return doc if isinstance(doc, int) else 0
 
 class RollCommand(commands.Cog):
-    @commands.command(name="roll", aliases=["r"])
+    @commands.command(name="roll", aliases=["r"], help="Rolls a d20 with optional modifiers or lore skills. Use `lore <skill>` for lore checks. Modifiers can be used directly (e.g., `!roll perception`). For manual rolls, use `!roll 1d20+5`.")
     async def roll(self, ctx, *, expression: str):
         user_id = str(ctx.author.id)
         expression = expression.strip().lower()
