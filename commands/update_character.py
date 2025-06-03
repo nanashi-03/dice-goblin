@@ -22,7 +22,8 @@ class UpdateCharacter(commands.Cog):
             return
 
         url = f"https://pathbuilder2e.com/json.php?id={pb_id}"
-        async with aiohttp.ClientSession() as session:
+        connector = aiohttp.TCPConnector(force_close=True)
+        async with aiohttp.ClientSession(connector=connector) as session:
             try:
                 async with session.get(url) as response:
                     if response.status != 200:

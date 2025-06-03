@@ -12,7 +12,8 @@ class ImportCharacter(commands.Cog):
         url = f"https://pathbuilder2e.com/json.php?id={pb_id}"
         user_id = str(ctx.author.id)
 
-        async with aiohttp.ClientSession() as session:
+        connector = aiohttp.TCPConnector(force_close=True)
+        async with aiohttp.ClientSession(connector=connector) as session:
             try:
                 async with session.get(url) as response:
                     if response.status != 200:

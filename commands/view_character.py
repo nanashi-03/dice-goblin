@@ -12,6 +12,14 @@ class Sheet(commands.Cog):
             await ctx.send("❌ You don't have a current character set. Use `!setactive` to set one.")
             return
 
+        def striking_multiplier(striking: str):
+            return {
+                "": 1,
+                "striking": 2,
+                "greaterStriking": 3,
+                "majorStriking": 4
+            }.get(striking, 1)
+
         pb_id = user_doc["current_character"]
         character = characters.find_one({"user_id": user_id, "pb_id": pb_id})
         if not character:
@@ -91,7 +99,7 @@ class Sheet(commands.Cog):
         weapons = character.get("weapons", [])
         embed.add_field(
             name="🗡️ Weapons",
-            value="\n".join([f"{w['display']} (Damage: {w.get('damage', 'N/A')}, Damage Type: {w.get('damage_type', 'N/A')}, Attack Bonus: {w.get('attack_bonus', 0)})" for w in weapons]) if weapons else "None",
+            value="\n".join([f"{w['display']} (Damage: {striking_multiplier(w.get('striking', ''))}{w.get('damage_die', 'N/A')}, Damage Type: {w.get('damage_type', 'N/A')}, Attack Bonus: {w.get('attack_bonus', 0)})" for w in weapons]) if weapons else "None",
             inline=False
         )
 

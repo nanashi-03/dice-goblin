@@ -124,7 +124,7 @@ class Attack(commands.Cog):
             embed.add_field(name="🎯 Target AC", value=target_ac, inline=True)
             embed.add_field(name="✅ Result", value=hit_type, inline=True)
         if damage is not None:
-            embed.add_field(name="💥 Damage", value=f"`{damage_expr}` = **{damage}**", inline=False)
+            embed.add_field(name="💥 Damage", value=f"`{damage_roll}` = **{damage}**", inline=False)
         else:
             embed.add_field(name="💥 Damage", value="Missed!", inline=False)
 
