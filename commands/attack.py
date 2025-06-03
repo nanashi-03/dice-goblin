@@ -35,7 +35,7 @@ class Attack(commands.Cog):
         character = get_active_character(ctx.author.id) 
      
         if not character:
-            return await ctx.send("No active character set.")
+            return await ctx.send("No character found. Please import your character first using `!import <pathbuilder_id>`.")
 
         # Optional modifiers
         extra_dmg = 0

@@ -8,5 +8,4 @@ db_name = "pf2e"
 
 client = MongoClient(mongo_uri)
 db = client[db_name]
-characters = db.characters
-users = db.users
+characters = db.characters  # Now stores one character per user

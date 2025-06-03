@@ -12,15 +12,11 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 # Load commands
 @bot.event
 async def setup_hook():
-    # List of all command modules to load
+    # Reduced list of commands
     extensions = [
         "import_character",
         "view_character",
-        "delete_character",
         "roll",
-        "update_character",
-        "list_character",
-        "set_character",
         "attack"
     ]
     for ext in extensions:
