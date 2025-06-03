@@ -1,5 +1,16 @@
 from datetime import datetime, timezone
 def parse_pathbuilder_character(user_id, data, pid):
+    """Parse character data from Pathbuilder 2e JSON export.
+    
+    Args:
+        user_id (str): Discord user ID
+        data (dict): Raw JSON data from Pathbuilder
+        pid (str): Pathbuilder character ID
+        
+    Returns:
+        dict: Parsed character data for database storage
+    """
+
     build = data["build"]
 
     skill_to_ability = {

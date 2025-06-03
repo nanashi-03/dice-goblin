@@ -13,7 +13,7 @@ if missing:
 intents = discord.Intents.default()
 intents.message_content = True
 
-bot = commands.Bot(command_prefix="!", intents=intents)
+bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
 
 # Load commands
 @bot.event
@@ -23,7 +23,9 @@ async def setup_hook():
         "import_character",
         "view_character",
         "roll",
-        "attack"
+        "repeat_roll",
+        "attack",
+        "help"
     ]
     for ext in extensions:
         await bot.load_extension(f"commands.{ext}")

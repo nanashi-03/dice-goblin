@@ -6,6 +6,14 @@ import re
 from utils.fetch import get_active_character  # You should have a utility for this
 
 def parse_traits(args):
+    """Parse weapon traits from command arguments.
+    
+    Args:
+        args (list): List of command arguments
+        
+    Returns:
+        dict: Parsed weapon traits
+    """
     traits = {}
     for arg in args:
         if arg.startswith("fatal-"):
@@ -27,10 +35,11 @@ def striking_multiplier(striking: str):
     }.get(striking, 1)
 
 class Attack(commands.Cog):
+    """Commands for handling weapon attacks and damage rolls."""
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name="attack", aliases=["atk", "a"], help="Make an attack with a weapon. Usage: !attack <weapon_name> [attack_number] [-d <extra_damage>] [-b <extra_bonus>] [-ac <target_ac>] [crit] [traits...]")
+    @commands.command(name="attack", aliases=["atk", "a"], help="Make an attack with a weapon.\nUsage:\n```!attack <weapon_name> [-n attack_number] [-d <extra_damage>] [-b <extra_bonus>] [-ac <target_ac>] [crit] [modifiers...]```\nAvailable modifiers: agile, flurry, fatal-<die>, deadly-<die>, 2h-<die>")
     async def attack(self, ctx, weapon_name: str, *args):
         character = get_active_character(ctx.author.id) 
      

@@ -28,13 +28,22 @@ MODIFIER_FIELDS = {
 }
 
 def get_nested(doc, dotted_key):
-    """Fetch nested key using dot notation"""
+    """Fetch nested key using dot notation.
+    
+    Args:
+        doc (dict): Document to search in
+        dotted_key (str): Key in dot notation (e.g., "saves.fortitude")
+        
+    Returns:
+        int: Value at the nested key or 0 if not found
+    """
     keys = dotted_key.split(".")
     for k in keys:
         doc = doc.get(k, {})
     return doc if isinstance(doc, int) else 0
 
 class RollCommand(commands.Cog):
+    """Commands for handling dice rolls and skill checks."""
     @commands.command(name="roll", aliases=["r"], help="Rolls a d20 with optional modifiers or lore skills. Use `lore <skill>` for lore checks. Modifiers can be used directly (e.g., `!roll perception`). For manual rolls, use `!roll 1d20+5`.")
     async def roll(self, ctx, *, expression: str):
         user_id = str(ctx.author.id)
@@ -104,17 +113,18 @@ class RollCommand(commands.Cog):
             await ctx.send(f"❌ Invalid roll: {e}")
             return
 
-        embed = discord.Embed(
-            title=f"🎲 Roll: `{expression}`",
-            description=f"**Result:** `{result.total}`",
-            color=discord.Color.blurple()
-        )
-        embed.add_field(name="Details", value=f"`{result.result}`", inline=False)
-
+        # Use embed for lore and skill rolls, simple format for manual rolls
         if character and stat_label:
+            embed = discord.Embed(
+                title=f"🎲 Roll: `{expression}`",
+                description=f"**Result:** `{result.total}`",
+                color=discord.Color.blurple()
+            )
+            embed.add_field(name="Details", value=f"`{result.result}`", inline=False)
             embed.set_footer(text=f"{character['name']}'s {stat_label}")
-
-        await ctx.send(embed=embed)
+            await ctx.send(embed=embed)
+        else:
+            await ctx.send(f"`{expression}({result.result})={result.total}`")
 
     @roll.error
     async def roll_error(self, ctx, error):
@@ -124,6 +134,7 @@ class RollCommand(commands.Cog):
             await ctx.send("❌ Invalid roll format. Use `!roll <expression>` or `!roll lore <skill>`.")
         else:
             await ctx.send("❌ An unexpected error occurred while processing the roll.")
+
 
 async def setup(bot):
     await bot.add_cog(RollCommand())
