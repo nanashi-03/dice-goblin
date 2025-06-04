@@ -135,12 +135,12 @@ class Attack(commands.Cog):
 
         # Build response embed
         embed = discord.Embed(title=f"🎯 Attack Roll: {weapon['display']}", color=discord.Color.green())
-        embed.add_field(name="🎲 Roll", value=f"`{attack_roll}` = **{attack_result}**", inline=False)
+        embed.add_field(name="🎲 Roll", value=f"{attack_roll}", inline=False)
         if target_ac:
             embed.add_field(name="🎯 Target AC", value=target_ac, inline=True)
             embed.add_field(name="✅ Result", value=hit_type, inline=True)
         if damage is not None:
-            embed.add_field(name="💥 Damage", value=f"`{damage_roll}` = **{damage}**", inline=False)
+            embed.add_field(name="💥 Damage", value=f"{damage_roll}", inline=False)
         else:
             embed.add_field(name="💥 Damage", value="Missed!", inline=False)
 

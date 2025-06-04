@@ -3,7 +3,7 @@ import d20
 
 class RepeatRollCommand(commands.Cog):
     @commands.command(name="repeatroll", aliases=["rr"], help="Repeats a roll multiple times. Usage: `!rr <number> <roll>`")
-    async def repeat_roll(self, ctx, times: int, *, expression: str):
+    async def repeat_roll(self, ctx, times: int, *, expression):
         if times < 1:
             await ctx.send("❌ Please specify a number larger than 1.")
             return
@@ -14,7 +14,7 @@ class RepeatRollCommand(commands.Cog):
             await ctx.send(f"❌ Invalid roll: {e}")
             return
 
-        roll_texts = [f"`{expression}({roll.result})={roll.total}`" for roll in rolls]
+        roll_texts = [f"{expression}({roll.result})" for roll in rolls]
         total = sum(roll.total for roll in rolls)
         
         await ctx.send("\n".join([*roll_texts, f"Total: `{total}`"]))

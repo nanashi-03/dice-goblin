@@ -47,7 +47,16 @@ class RollCommand(commands.Cog):
     @commands.command(name="roll", aliases=["r"], help="Rolls a d20 with optional modifiers or lore skills. Use `lore <skill>` for lore checks. Modifiers can be used directly (e.g., `!roll perception`). For manual rolls, use `!roll 1d20+5`.")
     async def roll(self, ctx, *, expression: str):
         user_id = str(ctx.author.id)
-        expression = expression.strip().lower()
+        parts = expression.strip().lower().split()
+        bonus = 0
+        
+        # Extract bonus if specified with +N or -N
+        if parts[-1].startswith(('+', '-')) and parts[-1][1:].isdigit():
+            bonus = int(parts[-1])
+            expression = ' '.join(parts[:-1])
+        else:
+            expression = ' '.join(parts)
+
         character = None
 
         # Lore handling
@@ -90,6 +99,8 @@ class RollCommand(commands.Cog):
 
             mod = lores[lore_name]
             expression = f"1d20+{mod}"
+            if bonus:
+                expression += f"{bonus:+d}"
             stat_label = f"{lore_name.title()} Lore"
 
         elif expression in MODIFIER_FIELDS:
@@ -102,6 +113,8 @@ class RollCommand(commands.Cog):
             modifier = get_nested(character, mod_field)
             stat_label = expression.title()
             expression = f"1d20+{modifier}"
+            if bonus:
+                expression += f"{bonus:+d}"
 
         else:
             stat_label = None  # For manual rolls
@@ -120,11 +133,11 @@ class RollCommand(commands.Cog):
                 description=f"**Result:** `{result.total}`",
                 color=discord.Color.blurple()
             )
-            embed.add_field(name="Details", value=f"`{result.result}`", inline=False)
+            embed.add_field(name="Details", value=f"{result.result}", inline=False)
             embed.set_footer(text=f"{character['name']}'s {stat_label}")
             await ctx.send(embed=embed)
         else:
-            await ctx.send(f"`{expression}({result.result})={result.total}`")
+            await ctx.send(f"{expression}({result.result})")
 
     @roll.error
     async def roll_error(self, ctx, error):
