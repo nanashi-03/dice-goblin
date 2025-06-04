@@ -4,8 +4,8 @@ import d20
 class RepeatRollCommand(commands.Cog):
     @commands.command(name="repeatroll", aliases=["rr"], help="Repeats a roll multiple times. Usage: `!rr <number> <roll>`")
     async def repeat_roll(self, ctx, times: int, *, expression):
-        if times < 1:
-            await ctx.send("❌ Please specify a number larger than 1.")
+        if times < 1 and times > 87:
+            await ctx.send("❌ Please specify a number of rolls between 1 and 87.")
             return
 
         try:
@@ -24,7 +24,7 @@ class RepeatRollCommand(commands.Cog):
         if isinstance(error, commands.MissingRequiredArgument):
             await ctx.send("❌ Please provide both the number of rolls and roll expression. Example: `!rr 2 1d20+5`")
         elif isinstance(error, commands.BadArgument):
-            await ctx.send("❌ Invalid number of rolls. Please provide a number above 1.")
+            await ctx.send("❌ Invalid number of rolls. Please provide a number between 1 and 87.")
         else:
             await ctx.send("❌ An unexpected error occurred while processing the roll.")
 

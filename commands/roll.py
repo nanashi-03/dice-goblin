@@ -137,7 +137,7 @@ class RollCommand(commands.Cog):
             embed.set_footer(text=f"{character['name']}'s {stat_label}")
             await ctx.send(embed=embed)
         else:
-            await ctx.send(f"{expression}({result.result})")
+            await ctx.send(f"{result.result}")
 
     @roll.error
     async def roll_error(self, ctx, error):
